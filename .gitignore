@@ -1,0 +1,13 @@
+# 敏感信息
+*.secret
+*.key
+*.pem
+
+# 临时文件
+*.tmp
+*.log
+.DS_Store
+
+# 个人配置（可能包含敏感信息）
+*-private.yaml
+*-private.yml
