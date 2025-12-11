@@ -1,11 +1,10 @@
-# DNS防泄露版本
 # 必读！！！
 # 注意规则在满足自己需求情况下，尽量做到精简，不要过度复杂，以免影响性能。
 # 跑裸核用户请自行去掉下方控制面板模块的注释。
 # 机场订阅
 proxy-providers:
   Qingyun:
-    url: ""
+    url: "url"
     type: http
     interval: 86400
     health-check:
@@ -14,7 +13,7 @@ proxy-providers:
       interval: 300
     proxy: 直连
   Yesha:
-    url: ""
+    url: "url"
     type: http
     interval: 86400
     health-check:
@@ -91,7 +90,7 @@ dns:
   respect-rules: true # 关键：DNS 解析结果遵循分流规则
 
   enhanced-mode: fake-ip
-  fake-ip-range: 28.0.0.1/8
+  fake-ip-range: 198.18.0.1/16
   fake-ip-filter-mode: blacklist
   fake-ip-filter:
     - rule-set:fakeipfilter_domain
@@ -158,9 +157,9 @@ rules:
   - RULE-SET,private_domain,直连
   - RULE-SET,apple_domain,直连
   - RULE-SET,apple_ip,直连
-  # 新增：测速网站直连（测自家宽带）
+  # 测速网站直连（测自家宽带）
   - RULE-SET,speedtest_domain,直连
-  # 新增：PayPal直连（防止风控）
+  # PayPal直连（防止风控）
   - RULE-SET,paypal_domain,直连
   # 中国大陆直连
   - RULE-SET,cn_domain,直连
@@ -175,15 +174,12 @@ rules:
   - RULE-SET,telegram_domain,📲 即时通讯
   - RULE-SET,telegram_ip,📲 即时通讯
   - RULE-SET,whatsapp_domain,📲 即时通讯
-  - RULE-SET,whatsapp_ip,📲 即时通讯
   - RULE-SET,github_domain,🚀 节点选择
-
-  # 谷歌服务（除了 Youtube 之外的）走节点选择
   - RULE-SET,google_domain,🚀 节点选择
   - RULE-SET,google_ip,🚀 节点选择
-
-  # 剩下的所有非国内流量
   - RULE-SET,geolocation-!cn,🚀 节点选择
+
+  # 剩下的流量
   - MATCH,🐟 漏网之鱼
 
 # 规则集
