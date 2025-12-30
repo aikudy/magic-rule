@@ -166,6 +166,7 @@ rules:
   # 局域网与直连
   - RULE-SET,private_ip,直连,no-resolve
   - RULE-SET,private_domain,直连
+  - RULE-SET,my_direct_domain,直连
   - RULE-SET,apple_domain,直连
   - RULE-SET,apple_ip,直连
   - RULE-SET,speedtest_domain,直连
@@ -187,7 +188,7 @@ rules:
   - RULE-SET,google_ip,🌾 Google
   - RULE-SET,javdb_domain,🏯 Explorer
   - RULE-SET,javbus_domain,🏯 Explorer
-  - RULE-SET,my_custom_domain,🚀 节点选择
+  - RULE-SET,my_proxy_domain,🚀 节点选择
   - RULE-SET,geolocation-!cn,🚀 节点选择
 
   # 兜底
@@ -196,12 +197,20 @@ rules:
 # 9. 规则集定义 (Rule Providers)
 rule-providers:
   # --- 你的自定义 GitHub 文件 ---
-  my_custom_domain:
+  my_direct_domain:
     type: http
     behavior: domain
     format: yaml
-    url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/private-domain.yaml"
-    path: ./ruleset/my_custom_domain.yaml
+    url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/private-direct-domain.yaml"
+    path: ./ruleset/my_direct_domain.yaml
+    interval: 86400
+
+  my_proxy_domain:
+    type: http
+    behavior: domain
+    format: yaml
+    url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/private-proxy-domain.yaml"
+    path: ./ruleset/my_proxy_domain.yaml
     interval: 86400
 
   my_fakeip_filter:
