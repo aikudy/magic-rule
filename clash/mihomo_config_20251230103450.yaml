@@ -175,6 +175,7 @@ rules:
   - RULE-SET,cn_ip,直连
 
   # --- 代理规则 ---
+  - RULE-SET,my_proxy_domain,🚀 节点选择
   - RULE-SET,ai,🤖 人工智能
   - RULE-SET,youtube_domain,📺 国际媒体
   - RULE-SET,netflix_domain,📺 国际媒体
@@ -188,7 +189,6 @@ rules:
   - RULE-SET,google_ip,🌾 Google
   - RULE-SET,javdb_domain,🏯 Explorer
   - RULE-SET,javbus_domain,🏯 Explorer
-  - RULE-SET,my_proxy_domain,🚀 节点选择
   - RULE-SET,geolocation-!cn,🚀 节点选择
 
   # 兜底

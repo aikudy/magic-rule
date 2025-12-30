@@ -4,4 +4,19 @@
 # DOMAIN-KEYWORD,xxx：域名包含 xxx 就命中（范围最大，最容易误命中）
 
 payload:
-  - DOMAIN-SUFFIX, hcfy.ai
+  # 内网域名（如公司/家里自建域名）
+  - DOMAIN-SUFFIX,lan
+  - DOMAIN-SUFFIX,local
+  - DOMAIN-SUFFIX,home.arpa
+
+  # 路由器/旁路由/NAS 常见域名（按需保留）
+  - DOMAIN,router.asus.com
+  - DOMAIN-SUFFIX,synology.com
+  - DOMAIN-SUFFIX,qnap.com
+
+  # 自己的服务
+  # - DOMAIN,git.example.com
+  # - DOMAIN-SUFFIX,example.internal
+
+  # 常见国内直连
+  - DOMAIN-SUFFIX,hcfy.ai

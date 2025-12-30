@@ -4,4 +4,4 @@
 # DOMAIN-KEYWORD,xxx：域名包含 xxx 就命中（范围最大，最容易误命中）
 
 payload:
-  - DOMAIN-SUFFIX, hcfy.com
+  - DOMAIN-SUFFIX,hcfy.com
