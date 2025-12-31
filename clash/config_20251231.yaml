@@ -1,3 +1,7 @@
+# Clash Meta 配置文件示例
+# 适用于 Mihomo、Nikki 等 Clash Meta 客户端
+# 编写规则集参考：https://clash.wiki/
+
 # 1. 机场订阅
 proxy-providers:
   Qingyun:
@@ -199,7 +203,7 @@ rule-providers:
   # --- 你的自定义 GitHub 文件 ---
   my_direct_domain:
     type: http
-    behavior: domain
+    behavior: classical
     format: yaml
     url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/private-direct-domain.yaml"
     path: ./ruleset/my_direct_domain.yaml
@@ -207,7 +211,7 @@ rule-providers:
 
   my_proxy_domain:
     type: http
-    behavior: domain
+    behavior: classical
     format: yaml
     url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/private-proxy-domain.yaml"
     path: ./ruleset/my_proxy_domain.yaml
@@ -215,7 +219,7 @@ rule-providers:
 
   my_fakeip_filter:
     type: http
-    behavior: domain
+    behavior: classical
     format: yaml
     url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/fakeip-filter.yaml"
     path: ./ruleset/my_fakeip_filter.yaml
