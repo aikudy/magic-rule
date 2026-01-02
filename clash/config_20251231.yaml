@@ -4,15 +4,6 @@
 
 # 1. 机场订阅
 proxy-providers:
-  Qingyun:
-    url: "https://"
-    type: http
-    interval: 86400
-    health-check:
-      enable: true
-      url: https://www.gstatic.com/generate_204
-      interval: 300
-    proxy: 直连
   Yesha:
     url: "https://"
     type: http
@@ -31,7 +22,7 @@ proxies:
 mixed-port: 7890
 allow-lan: true
 bind-address: "*"
-ipv6: false
+ipv6: true
 unified-delay: true
 tcp-concurrent: true
 log-level: info
@@ -81,7 +72,7 @@ tun:
 
 # 6. DNS 设置 (Fake-IP 模式)
 dns:
-  enable: false # mac 使用客户端配置
+  enable: true # mac 使用客户端配置
   prefer-h3: false # 关闭以避免与某些 DOH 服务器冲突
   cache-algorithm: arc
   listen: 0.0.0.0:7874 # openclash 默认监听端口， Nikki 默认端口 1053
