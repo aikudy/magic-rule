@@ -1,0 +1,371 @@
+# Clash Meta 配置文件示例
+# 适用于 Mihomo、Nikki 等 Clash Meta 客户端
+# 编写规则集参考：https://clash.wiki/
+
+# 机场订阅
+proxy-providers:
+  Qingyun:
+    url: "https://"
+    type: http
+    interval: 86400
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 300
+    proxy: 直连
+  Yesha:
+    url: "https://"
+    type: http
+    interval: 86400
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 300
+    proxy: 直连
+
+# 静态节点
+proxies:
+  - {name: 直连, type: direct}
+
+# YSY 配置
+mode: rule
+mixed-port: 7897
+allow-lan: false
+ipv6: true
+log-level: info
+secret: set-your-secret
+unified-delay: true
+bind-address: "*"
+external-controller-pipe: \\.\pipe\verge-mihomo
+tcp-concurrency: true
+profile:
+  store-selected: true
+
+tun:
+  enable: true
+  stack: gvisor
+  auto-route: true
+  strict-route: false
+  auto-detect-interface: true
+  dns-hijack:
+    - any:53
+external-controller-cors:
+  allow-private-network: true
+  allow-origin:
+  - "*"
+
+dns:
+    enable: true
+    ipv6: true
+    default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+    enhanced-mode: fake-ip
+    fake-ip-range: 198.18.0.1/16
+    use-hosts: true
+    nameserver:
+    - 223.5.5.5
+    - 114.114.114.114
+    fallback:
+    - 8.8.8.8
+    - 1.1.1.1
+    fallback-filter:
+      geoip: true
+      ipcidr:
+      - 240.0.0.0/4
+      - 0.0.0.0/32
+    use-system-hosts: false
+
+# 策略组
+proxy-groups:
+  # 主开关
+  - name: 🚀 节点选择
+    type: select
+    proxies: [♻️ 自动选择, 🇭🇰 香港节点, 🇨🇳 台湾节点, 🇯🇵 日本节点, 🇰🇷 韩国节点, 🇸🇬 狮城节点, 🇺🇲 美国节点, 🌐 全部节点, 直连]
+
+  # 场景策略
+  - name: 🌾 Google
+    type: select
+    proxies: [🚀 节点选择, 🇭🇰 香港节点, 🇨🇳 台湾节点, 🇯🇵 日本节点, 🇰🇷 韩国节点, 🇸🇬 狮城节点, 🇺🇲 美国节点]
+
+  - name: 🤖 人工智能
+    type: select
+    proxies: [🚀 节点选择, 🇯🇵 日本节点, 🇰🇷 韩国节点, 🇸🇬 狮城节点, 🇺🇲 美国节点]
+
+  - name: 📺 国际媒体
+    type: select
+    proxies: [🚀 节点选择, ♻️ 自动选择, 🇭🇰 香港节点, 🇨🇳 台湾节点, 🇯🇵 日本节点, 🇰🇷 韩国节点, 🇸🇬 狮城节点, 🇺🇲 美国节点]
+  - name: 📲 即时通讯
+    type: select
+    proxies: [🚀 节点选择, ♻️ 自动选择, 🇭🇰 香港节点, 🇨🇳 台湾节点, 🇯🇵 日本节点, 🇰🇷 韩国节点, 🇸🇬 狮城节点, 🇺🇲 美国节点]
+
+  - name: 🏯 Explorer
+    type: select
+    proxies: [🇭🇰 香港节点, 🇨🇳 台湾节点, 🇰🇷 韩国节点, 🇸🇬 狮城节点, 🇺🇲 美国节点]
+
+  # 自动选择与筛选
+  - name: ♻️ 自动选择
+    type: url-test
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+    tolerance: 50
+    include-all: true
+    filter: "^(?!.*(网址|发布|直连|剩余|到期|过期|官网|更新|群|游戏)).*$"
+
+  - {name: 🇭🇰 香港节点, type: select, include-all: true, filter: "(?i)(港|HK|Hong Kong)"}
+  - {name: 🇨🇳 台湾节点, type: select, include-all: true, filter: "(?i)(台|TW|Taiwan)"}
+  - {name: 🇯🇵 日本节点, type: select, include-all: true, filter: "(?i)(日|JP|Japan)"}
+  - {name: 🇰🇷 韩国节点, type: select, include-all: true, filter: "(?i)(韩|KR|Korea)"}
+  - {name: 🇸🇬 狮城节点, type: select, include-all: true, filter: "(?i)(新加|坡|SG|Singapore)"}
+  - {name: 🇺🇲 美国节点, type: select, include-all: true, filter: "(?i)(美|US|States)"}
+  - {name: 🌐 全部节点, type: select, include-all: true, filter: "^(?!.*(网址|发布|直连|剩余|到期|过期|官网|更新|群|游戏)).*$"}
+
+  - name: 🐟 漏网之鱼
+    type: select
+    proxies: [🚀 节点选择, 直连]
+
+# 分流规则逻辑
+rules:
+  # 局域网与直连
+  - RULE-SET,private_ip,直连,no-resolve
+  - RULE-SET,private_domain,直连
+  - RULE-SET,my_direct_domain,直连
+  - RULE-SET,apple_domain,直连
+  - RULE-SET,apple_ip,直连
+  - RULE-SET,speedtest_domain,直连
+  - RULE-SET,paypal_domain,直连
+  - RULE-SET,cn_domain,直连
+  - RULE-SET,cn_ip,直连
+
+  # --- 代理规则 ---
+  - RULE-SET,my_proxy_domain,🚀 节点选择
+  - RULE-SET,ai,🤖 人工智能
+  - RULE-SET,youtube_domain,📺 国际媒体
+  - RULE-SET,netflix_domain,📺 国际媒体
+  - RULE-SET,netflix_ip,📺 国际媒体
+  - RULE-SET,tiktok_domain,📺 国际媒体
+  - RULE-SET,telegram_domain,📲 即时通讯
+  - RULE-SET,telegram_ip,📲 即时通讯
+  - RULE-SET,whatsapp_domain,📲 即时通讯
+  - RULE-SET,github_domain,🚀 节点选择
+  - RULE-SET,google_domain,🌾 Google
+  - RULE-SET,google_ip,🌾 Google
+  - RULE-SET,javdb_domain,🏯 Explorer
+  - RULE-SET,javbus_domain,🏯 Explorer
+  - RULE-SET,geolocation-!cn,🚀 节点选择
+
+  # 兜底
+  - MATCH,🐟 漏网之鱼
+
+# 规则集定义 (Rule Providers)
+rule-providers:
+  # --- 你的自定义 GitHub 文件 ---
+  my_direct_domain:
+    type: http
+    behavior: classical
+    format: yaml
+    url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/private-direct-domain.yaml"
+    path: ./ruleset/my_direct_domain.yaml
+    interval: 86400
+
+  my_proxy_domain:
+    type: http
+    behavior: classical
+    format: yaml
+    url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/private-proxy-domain.yaml"
+    path: ./ruleset/my_proxy_domain.yaml
+    interval: 86400
+
+  my_fakeip_filter:
+    type: http
+    behavior: classical
+    format: yaml
+    url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/fakeip-filter.yaml"
+    path: ./ruleset/my_fakeip_filter.yaml
+    interval: 86400
+
+  # --- 公共规则集 (MetaCubeX) ---
+  fakeipfilter_public:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/wwqgtxx/clash-rules@release/fakeip-filter.mrs"
+    path: ./ruleset/fakeipfilter_public.mrs
+    interval: 86400
+
+  private_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/private.mrs"
+    path: ./ruleset/private_domain.mrs
+    interval: 86400
+
+  cn_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/cn.mrs"
+    path: ./ruleset/cn_domain.mrs
+    interval: 86400
+
+  ai:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ai-!cn.mrs"
+    path: ./ruleset/ai.mrs
+    interval: 86400
+
+  youtube_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/youtube.mrs"
+    path: ./ruleset/youtube_domain.mrs
+    interval: 86400
+
+  google_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/google.mrs"
+    path: ./ruleset/google_domain.mrs
+    interval: 86400
+
+  github_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/github.mrs"
+    path: ./ruleset/github_domain.mrs
+    interval: 86400
+
+  telegram_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/telegram.mrs"
+    path: ./ruleset/telegram_domain.mrs
+    interval: 86400
+
+  whatsapp_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/whatsapp.mrs"
+    path: ./ruleset/whatsapp_domain.mrs
+    interval: 86400
+
+  netflix_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/netflix.mrs"
+    path: ./ruleset/netflix_domain.mrs
+    interval: 86400
+
+  paypal_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/paypal.mrs"
+    path: ./ruleset/paypal_domain.mrs
+    interval: 86400
+
+  apple_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/apple.mrs"
+    path: ./ruleset/apple_domain.mrs
+    interval: 86400
+
+  speedtest_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/ookla-speedtest.mrs"
+    path: ./ruleset/speedtest_domain.mrs
+    interval: 86400
+
+  tiktok_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/tiktok.mrs"
+    path: ./ruleset/tiktok_domain.mrs
+    interval: 86400
+
+  geolocation-!cn:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/geolocation-!cn.mrs"
+    path: ./ruleset/geolocation-not-cn.mrs
+    interval: 86400
+
+  javbus_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/javbus.mrs"
+    path: ./ruleset/javbus.mrs
+    interval: 86400
+
+  javdb_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/javdb.mrs"
+    path: ./ruleset/javdb.mrs
+    interval: 86400
+
+  # --- IP 规则 ---
+  private_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/private.mrs"
+    path: ./ruleset/private_ip.mrs
+    interval: 86400
+
+  cn_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.mrs"
+    path: ./ruleset/cn_ip.mrs
+    interval: 86400
+
+  google_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/google.mrs"
+    path: ./ruleset/google_ip.mrs
+    interval: 86400
+
+  telegram_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/telegram.mrs"
+    path: ./ruleset/telegram_ip.mrs
+    interval: 86400
+
+  netflix_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/netflix.mrs"
+    path: ./ruleset/netflix_ip.mrs
+    interval: 86400
+
+  apple_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo-lite/geoip/apple.mrs"
+    path: ./ruleset/apple_ip.mrs
+    interval: 86400
