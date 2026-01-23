@@ -1,0 +1,16 @@
+# 私有直连域名列表
+# DOMAIN,aaa.com：只想命中单个具体域名时用（最精确）。
+# DOMAIN-SUFFIX,aaa.com：想命中该域名及其所有子域名时用（最常用）。
+# DOMAIN-KEYWORD,xxx：域名包含 xxx 就命中（范围最大，最容易误命中）
+# 参考：https://clash.wiki/premium/rule-providers.html
+
+payload:
+  # 单个 IP（用 /32）
+  - 5.28.195.2/32
+  - 140.82.114.21/32
+
+  # 一个网段
+  - 198.51.100.0/24
+
+  # 你自己的服务器出口/机房段（示例）
+  # - 1.2.3.0/24
