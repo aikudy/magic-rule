@@ -1,9 +1,8 @@
-# 私有代理域名列表
+# 私有代理域名列表，常见需要科学上网的服务（按需保留）
 # DOMAIN,aaa.com：只想命中单个具体域名时用（最精确）。
 # DOMAIN-SUFFIX,aaa.com：想命中该域名及其所有子域名时用（最常用）。
 # DOMAIN-KEYWORD,xxx：域名包含 xxx 就命中（范围最大，最容易误命中）
 # 参考：https://clash.wiki/premium/rule-providers.html
 
 payload:
-  - DOMAIN-SUFFIX,hcfy.com
   - DOMAIN-SUFFIX,warp.dev
