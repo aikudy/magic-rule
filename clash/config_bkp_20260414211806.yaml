@@ -2,10 +2,10 @@
 # 适用于 Mihomo、Nikki 等 Clash Meta 客户端
 # 编写规则集参考：https://clash.wiki/
 
-# 1. 机场订阅
+# 机场订阅
 proxy-providers:
   Yesha:
-    url: "https://"
+    url: "~"
     type: http
     interval: 86400
     health-check:
@@ -14,101 +14,65 @@ proxy-providers:
       interval: 300
     proxy: 直连
 
-# 2. 静态节点
+# 静态节点
 proxies:
   - {name: 直连, type: direct}
 
-# 3. 全局配置
+# 全局配置
 mixed-port: 7890
-allow-lan: true
+allow-lan: false
 bind-address: "*"
 ipv6: true
-unified-delay: true
-tcp-concurrent: true
 log-level: info
 mode: rule
-find-process-mode: 'off'
-global-client-fingerprint: chrome
+# find-process-mode: 'off'
+# global-client-fingerprint: chrome
 keep-alive-idle: 600
 keep-alive-interval: 15
+unified-delay: true
+tcp-concurrent: true
 
 profile:
   store-selected: true
   store-fake-ip: true
 
-external-controller: 0.0.0.0:9090
-secret: ""
-external-ui: ui
-external-ui-name: zashboard
-external-ui-url: "https://github.com/Zephyruso/zashboard/archive/refs/heads/gh-pages.zip"
-
-# 4. 嗅探设置
-sniffer:
-  enable: true
-  parse-pure-ip: true
-  sniff:
-    HTTP:
-      ports: [80, 8080-8880]
-      override-destination: true
-    TLS:
-      ports: [443, 8443]
-    QUIC:
-      ports: [443, 8443]
-  skip-domain:
-    - "Mijia Cloud"
-    - "+.push.apple.com"
-
-# 5. 入站设置 (TUN模式)
-tun:
-  enable: true
-  stack: system # x86 性能足够，system 兼容性最好
-  dns-hijack: ["any:53", "tcp://any:53"]
-  #使用nikki，混入全部不修改的情况，开启接口指定为nikki
-  # device: nikki
-  #使用仅内核自行修改下面三项为true
-  auto-route: false
-  auto-redirect: false
-  auto-detect-interface: false
-
-# 6. DNS 设置 (Fake-IP 模式)
+# DNS 设置 (Fake-IP 模式)
 dns:
-  enable: true # mac 使用客户端配置
-  prefer-h3: false # 关闭以避免与某些 DOH 服务器冲突
-  cache-algorithm: arc
-  listen: 0.0.0.0:7874 # openclash 默认监听端口， Nikki 默认端口 1053
-  ipv6: false
-  respect-rules: true
+  enable: true
+  ipv6: true
+  prefer-h3: true
+  listen: 127.0.0.1:53
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
-  fake-ip-filter-mode: blacklist
-  # Fake-IP 过滤名单
   fake-ip-filter:
-    # 引用下方定义的规则集 (Clash Meta 特性)
-    - rule-set:fakeipfilter_public
-    # 引用你自己 GitHub 上的 FakeIP 过滤文件 (需要在 rule-providers 定义)
-    - rule-set:my_fakeip_filter
-    - "+.lan"
-    - "+.local"
-
-  # 如果使用了域名类的 DOH 服务器（例如 https://dns.alidns.com/dns-query ），则需要启用该服务器。
-  default-nameserver:
+    - "geosite:connectivity-check"
+    - "geosite:private"
+  default-nameserver: # 解析 nameserver 和 fallback 里面的域名（非 IP 的那种情况）
+    - 223.5.5.5
+    - 119.29.29.29
+    - 8.8.8.8
+  proxy-server-nameserver: # 用来解析代理节点的域名
     - https://223.5.5.5/dns-query
-
-  # 代理节点域名解析服务器，仅用于解析代理节点的域名
-  proxy-server-nameserver:
-    - https://dns.alidns.com/dns-query
-    - https://doh.pub/dns-query
-
-  # （主）默认的域名解析服务器
-  nameserver:
-    - https://dns.alidns.com/dns-query
-    - https://doh.pub/dns-query
-
-  # 备用的直连域名解析服务器
+    - https://1.12.12.12/dns-query
   direct-nameserver:
-    - 192.168.1.1
+    - https://223.5.5.5/dns-query
+    - https://1.12.12.12/dns-query
+  nameserver:
+    - "https://8.8.8.8/dns-query#PROXY&ecs=120.76.0.0/14&ecs-override=true"
 
-# 7. 策略组
+# TUN 设置
+tun:
+  enable: false
+  stack: system
+  dns-hijack: # dns劫持端口
+    - 127.0.0.1:53
+  device: utun1024 #网卡名称，可修改为utun0或tun0等
+  auto-route: true
+  strict-route: false # 是否启用严格路由
+  auto-detect-interface: true
+  mtu: 1500 # 最大传输单元
+
+# 策略组
 proxy-groups:
   # 主开关
   - name: 🚀 节点选择
@@ -122,7 +86,7 @@ proxy-groups:
 
   - name: 🤖 人工智能
     type: select
-    proxies: [🚀 节点选择, 🇺🇲 美国节点, 🇯🇵 日本节点, 🇰🇷 韩国节点, 🇸🇬 狮城节点]
+    proxies: [🚀 节点选择, 🇯🇵 日本节点, 🇰🇷 韩国节点, 🇸🇬 狮城节点, 🇺🇲 美国节点]
 
   - name: 📺 国际媒体
     type: select
@@ -156,7 +120,7 @@ proxy-groups:
     type: select
     proxies: [🚀 节点选择, 直连]
 
-# 8. 分流规则逻辑
+# 分流规则逻辑
 rules:
   # 局域网与直连
   - RULE-SET,private_ip,直连,no-resolve
@@ -189,7 +153,7 @@ rules:
   # 兜底
   - MATCH,🐟 漏网之鱼
 
-# 9. 规则集定义 (Rule Providers)
+# 规则集定义 (Rule Providers)
 rule-providers:
   # --- 你的自定义 GitHub 文件 ---
   my_direct_domain:
