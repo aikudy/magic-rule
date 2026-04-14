@@ -77,27 +77,27 @@ proxy-groups:
   # 主开关
   - name: 🚀 节点选择
     type: select
-    proxies: [♻️ 自动选择, 🇭🇰 香港节点, 🇨🇳 台湾节点, 🇯🇵 日本节点, 🇰🇷 韩国节点, 🇸🇬 狮城节点, 🇺🇲 美国节点, 🌐 全部节点, 直连]
+    proxies: [♻️ 自动选择, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇸🇬 狮城自动, 🇺🇲 美国自动, 🇭🇰 香港手动, 🇨🇳 台湾手动, 🇯🇵 日本手动, 🇰🇷 韩国手动, 🇸🇬 狮城手动, 🇺🇲 美国手动, 🌐 全部节点, 直连]
 
   # 场景策略
   - name: 🌾 Google
     type: select
-    proxies: [🚀 节点选择, 🇭🇰 香港节点, 🇨🇳 台湾节点, 🇯🇵 日本节点, 🇰🇷 韩国节点, 🇸🇬 狮城节点, 🇺🇲 美国节点]
+    proxies: [🚀 节点选择, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇸🇬 狮城自动, 🇺🇲 美国自动]
 
   - name: 🤖 人工智能
     type: select
-    proxies: [🚀 节点选择, 🇯🇵 日本节点, 🇰🇷 韩国节点, 🇸🇬 狮城节点, 🇺🇲 美国节点]
+    proxies: [🚀 节点选择, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇸🇬 狮城自动, 🇺🇲 美国自动]
 
   - name: 📺 国际媒体
     type: select
-    proxies: [🚀 节点选择, ♻️ 自动选择, 🇭🇰 香港节点, 🇨🇳 台湾节点, 🇯🇵 日本节点, 🇰🇷 韩国节点, 🇸🇬 狮城节点, 🇺🇲 美国节点]
+    proxies: [🚀 节点选择, ♻️ 自动选择, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇸🇬 狮城自动, 🇺🇲 美国自动]
   - name: 📲 即时通讯
     type: select
-    proxies: [🚀 节点选择, ♻️ 自动选择, 🇭🇰 香港节点, 🇨🇳 台湾节点, 🇯🇵 日本节点, 🇰🇷 韩国节点, 🇸🇬 狮城节点, 🇺🇲 美国节点]
+    proxies: [🚀 节点选择, ♻️ 自动选择, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇸🇬 狮城自动, 🇺🇲 美国自动]
 
   - name: 🏯 Explorer
     type: select
-    proxies: [🇭🇰 香港节点, 🇨🇳 台湾节点, 🇰🇷 韩国节点, 🇸🇬 狮城节点, 🇺🇲 美国节点]
+    proxies: [🇭🇰 香港自动, 🇨🇳 台湾自动, 🇰🇷 韩国自动, 🇸🇬 狮城自动, 🇺🇲 美国自动]
 
   # 自动选择与筛选
   - name: ♻️ 自动选择
@@ -108,12 +108,18 @@ proxy-groups:
     include-all: true
     filter: "^(?!.*(网址|发布|直连|剩余|到期|过期|官网|更新|群|游戏)).*$"
 
-  - {name: 🇭🇰 香港节点, type: select, include-all: true, filter: "(?i)(港|HK|Hong Kong)"}
-  - {name: 🇨🇳 台湾节点, type: select, include-all: true, filter: "(?i)(台|TW|Taiwan)"}
-  - {name: 🇯🇵 日本节点, type: select, include-all: true, filter: "(?i)(日|JP|Japan)"}
-  - {name: 🇰🇷 韩国节点, type: select, include-all: true, filter: "(?i)(韩|KR|Korea)"}
-  - {name: 🇸🇬 狮城节点, type: select, include-all: true, filter: "(?i)(新加|坡|SG|Singapore)"}
-  - {name: 🇺🇲 美国节点, type: select, include-all: true, filter: "(?i)(美|US|States)"}
+  - {name: 🇭🇰 香港手动, type: select, include-all: true, filter: "(?i)(港|HK|Hong Kong)"}
+  - {name: 🇨🇳 台湾手动, type: select, include-all: true, filter: "(?i)(台|TW|Taiwan)"}
+  - {name: 🇯🇵 日本手动, type: select, include-all: true, filter: "(?i)(日|JP|Japan)"}
+  - {name: 🇰🇷 韩国手动, type: select, include-all: true, filter: "(?i)(韩|KR|Korea)"}
+  - {name: 🇸🇬 狮城手动, type: select, include-all: true, filter: "(?i)(新加|坡|SG|Singapore)"}
+  - {name: 🇺🇲 美国手动, type: select, include-all: true, filter: "(?i)(美|US|States)"}
+  - {name: 🇭🇰 香港自动, type: fallback, url: "http://www.gstatic.com/generate_204", interval: 300, tolerance: 50, include-all: true, filter: "(?i)(港|HK|Hong Kong)"}
+  - {name: 🇨🇳 台湾自动, type: fallback, url: "http://www.gstatic.com/generate_204", interval: 300, tolerance: 50, include-all: true, filter: "(?i)(台|TW|Taiwan)"}
+  - {name: 🇯🇵 日本自动, type: fallback, url: "http://www.gstatic.com/generate_204", interval: 300, tolerance: 50, include-all: true, filter: "(?i)(日|JP|Japan)"}
+  - {name: 🇰🇷 韩国自动, type: fallback, url: "http://www.gstatic.com/generate_204", interval: 300, tolerance: 50, include-all: true, filter: "(?i)(韩|KR|Korea)"}
+  - {name: 🇸🇬 狮城自动, type: fallback, url: "http://www.gstatic.com/generate_204", interval: 300, tolerance: 50, include-all: true, filter: "(?i)(新加|坡|SG|Singapore)"}
+  - {name: 🇺🇲 美国自动, type: fallback, url: "http://www.gstatic.com/generate_204", interval: 300, tolerance: 50, include-all: true, filter: "(?i)(美|US|States)"}
   - {name: 🌐 全部节点, type: select, include-all: true, filter: "^(?!.*(网址|发布|直连|剩余|到期|过期|官网|更新|群|游戏)).*$"}
 
   - name: 🐟 漏网之鱼
