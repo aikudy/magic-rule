@@ -22,7 +22,7 @@ proxies:
 mixed-port: 7890
 allow-lan: false
 bind-address: "*"
-ipv6: false
+ipv6: true
 log-level: info
 mode: rule
 # find-process-mode: 'off'
@@ -39,7 +39,7 @@ profile:
 # DNS 设置 (Fake-IP 模式)
 dns:
   enable: true
-  ipv6: false
+  ipv6: true
   prefer-h3: true
   listen: 127.0.0.1:53
   enhanced-mode: fake-ip
@@ -125,7 +125,6 @@ rules:
   # 局域网与直连
   - RULE-SET,private_ip,直连,no-resolve
   - RULE-SET,private_domain,直连
-  - RULE-SET,my_direct_ip,直连,no-resolve
   - RULE-SET,my_direct_domain,直连
   - RULE-SET,apple_domain,直连
   - RULE-SET,apple_ip,直连
@@ -136,7 +135,6 @@ rules:
 
   # --- 代理规则 ---
   - RULE-SET,my_proxy_domain,🚀 节点选择
-  - RULE-SET,my_proxy_ip,🚀 节点选择
   - RULE-SET,ai,🤖 人工智能
   - RULE-SET,youtube_domain,📺 国际媒体
   - RULE-SET,netflix_domain,📺 国际媒体
@@ -172,22 +170,6 @@ rule-providers:
     format: yaml
     url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/private-proxy-domain.yaml"
     path: ./ruleset/my_proxy_domain.yaml
-    interval: 86400
-
-  my_direct_ip:
-    type: http
-    behavior: ipcidr
-    format: yaml
-    url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/private-direct-ip.yaml"
-    path: ./ruleset/my_direct_ip.yaml
-    interval: 86400
-
-  my_proxy_ip:
-    type: http
-    behavior: ipcidr
-    format: yaml
-    url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/private-proxy-ip.yaml"
-    path: ./ruleset/my_proxy_ip.yaml
     interval: 86400
 
   my_fakeip_filter:
