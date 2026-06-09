@@ -1,19 +1,11 @@
-# 必读！！！
-# 注意规则在满足自己需求情况下，尽量做到精简，不要过度复杂，以免影响性能。
-# 跑裸核用户请自行去掉下方控制面板模块的注释。
+# Clash Meta 配置文件示例
+# 适用于 Mihomo、Nikki 等 Clash Meta 客户端
+# 编写规则集参考：https://clash.wiki/
+
 # 机场订阅
 proxy-providers:
-  Qingyun:
-    url: "url"
-    type: http
-    interval: 86400
-    health-check:
-      enable: true
-      url: https://www.gstatic.com/generate_204
-      interval: 300
-    proxy: 直连
   Yesha:
-    url: "url"
+    url: "~"
     type: http
     interval: 86400
     health-check:
@@ -22,150 +14,133 @@ proxy-providers:
       interval: 300
     proxy: 直连
 
-# 节点信息
+# 静态节点
 proxies:
   - {name: 直连, type: direct}
 
 # 全局配置
 mixed-port: 7890
-allow-lan: true
+allow-lan: false
 bind-address: "*"
-ipv6: false
-unified-delay: true
-tcp-concurrent: true
+ipv6: true
 log-level: info
 mode: rule
-find-process-mode: 'off'
-global-client-fingerprint: chrome
+# find-process-mode: 'off'
+# global-client-fingerprint: chrome
 keep-alive-idle: 600
 keep-alive-interval: 15
+unified-delay: true
+tcp-concurrent: true
 
 profile:
   store-selected: true
   store-fake-ip: true
 
-# 为防止使用插件朋友遇到面板问题，我注释掉了此模块。
-#external-controller: 0.0.0.0:9090
-#secret: ""
-#external-ui: ui
-#external-ui-name: zashboard
-#external-ui-url: "https://github.com/Zephyruso/zashboard/archive/refs/heads/gh-pages.zip"
-
-# 嗅探
-sniffer:
-  enable: true
-  parse-pure-ip: true
-  sniff:
-    HTTP:
-      ports: [80, 8080-8880]
-      override-destination: true
-    TLS:
-      ports: [443, 8443]
-    QUIC:
-      ports: [443, 8443]
-  skip-domain:
-    - "Mijia Cloud"
-    - "+.push.apple.com"
-
-# 入站
-tun:
-  enable: true
-  # system/gvisor/mixed
-  stack: system
-  dns-hijack: ["any:53", "tcp://any:53"]
-  #使用nikki，混入全部不修改的情况，开启接口指定为nikki
-  #device: nikki
-  #使用仅内核自行修改下面三项为true
-  auto-route: false
-  auto-redirect: false
-  auto-detect-interface: false
-
-# DNS模块
+# DNS 设置 (Fake-IP 模式)
 dns:
   enable: true
-  prefer-h3: true # 开启 DoH 的 HTTP/3 支持，加速 DNS 查询
-  cache-algorithm: arc
-  listen: 0.0.0.0:1053
-  ipv6: false
-  respect-rules: true # 关键：DNS 解析结果遵循分流规则
-
+  ipv6: true
+  prefer-h3: true
+  listen: 127.0.0.1:53
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
-  fake-ip-filter-mode: blacklist
   fake-ip-filter:
-    - rule-set:fakeipfilter_domain
-    - "+.lan"
-    - "+.local"
-
-  # 默认 DNS (用于解析 DoH 域名本身)
-  default-nameserver:
+    - "geosite:connectivity-check"
+    - "geosite:private"
+  default-nameserver: # 解析 nameserver 和 fallback 里面的域名（非 IP 的那种情况）
     - 223.5.5.5
     - 119.29.29.29
-
-  # 1. 专门用于“直连”规则的 DNS (国内 DNS)
-  # 当匹配到 GeoSite CN 或直连规则时，使用这里解析
+    - 8.8.8.8
+  proxy-server-nameserver: # 用来解析代理节点的域名
+    - https://223.5.5.5/dns-query
+    - https://1.12.12.12/dns-query
   direct-nameserver:
-    - https://dns.alidns.com/dns-query
-    - https://doh.pub/dns-query
-
-  # 2. 专门用于“代理”规则的 DNS (国外 DNS)
-  # 当匹配到国外规则时，使用这里解析。
-  # 重点：去掉了 ECS，去掉了 #RULES (因为 direct-nameserver 已经接管了直连逻辑)
+    - https://223.5.5.5/dns-query
+    - https://1.12.12.12/dns-query
   nameserver:
-    - https://8.8.8.8/dns-query
-    - https://1.1.1.1/dns-query
+    - "https://8.8.8.8/dns-query#PROXY&ecs=120.76.0.0/14&ecs-override=true"
 
-  # 3. 专门解析节点域名的 DNS
-  proxy-server-nameserver:
-    - https://dns.alidns.com/dns-query
-    - https://doh.pub/dns-query
+# TUN 设置
+tun:
+  enable: false
+  stack: system
+  dns-hijack: # dns劫持端口
+    - 127.0.0.1:53
+  device: utun1024 #网卡名称，可修改为utun0或tun0等
+  auto-route: true
+  strict-route: false # 是否启用严格路由
+  auto-detect-interface: true
+  mtu: 1500 # 最大传输单元
 
-# 出站策略，根据自己情况调整每个策略里分组排序，增删都可以，比如把美国自动放到第一个，比如删除香港故转，注意别漏掉表情逗号等。
+# 策略组
 proxy-groups:
-  # 核心手动开关：决定大多数国外流量去哪
-  - {name: 🚀 节点选择, type: select, proxies: [♻️ 自动选择, 🇭🇰 香港节点, 🇯🇵 日本节点, 🇸🇬 狮城节点, 🇺🇲 美国节点, 🌐 全部节点, 直连]}
+  # 主开关
+  - name: 🚀 节点选择
+    type: select
+    proxies: [♻️ 自动选择, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇸🇬 狮城自动, 🇺🇲 美国自动, 🇭🇰 香港手动, 🇨🇳 台湾手动, 🇯🇵 日本手动, 🇰🇷 韩国手动, 🇸🇬 狮城手动, 🇺🇲 美国手动, 🌐 全部节点, 直连]
 
-  # AI 专用：ChatGPT 等对 IP 要求高，通常需要指定特定地区（如美国/日本）
-  - {name: 🤖 人工智能, type: select, proxies: [🇺🇲 美国节点, 🇯🇵 日本节点, 🇸🇬 狮城节点, 🚀 节点选择]}
+  # 场景策略
+  - name: 🌾 Google
+    type: select
+    proxies: [🚀 节点选择, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇸🇬 狮城自动, 🇺🇲 美国自动]
 
-  # 流媒体专用：YouTube/Netflix/TikTok，通常需要大带宽或原生解锁
-  - {name: 📺 国际媒体, type: select, proxies: [🚀 节点选择, ♻️ 自动选择, 🇭🇰 香港节点, 🇯🇵 日本节点, 🇸🇬 狮城节点, 🇺🇲 美国节点]}
+  - name: 🤖 人工智能
+    type: select
+    proxies: [🚀 节点选择, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇸🇬 狮城自动, 🇺🇲 美国自动]
 
-  # 即时通讯：如 Telegram, WhatsApp 等通讯软件，有时候需要单独指定 IP 防止风控
-  - {name: 📲 即时通讯, type: select, proxies: [🚀 节点选择, ♻️ 自动选择, 🇭🇰 香港节点, 🇯🇵 日本节点, 🇸🇬 狮城节点, 🇺🇲 美国节点]}
+  - name: 📺 国际媒体
+    type: select
+    proxies: [🚀 节点选择, ♻️ 自动选择, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇸🇬 狮城自动, 🇺🇲 美国自动]
+  - name: 📲 即时通讯
+    type: select
+    proxies: [🚀 节点选择, ♻️ 自动选择, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇸🇬 狮城自动, 🇺🇲 美国自动]
 
-  # --- 下面是自动筛选组 ---
-  # 自动测速：自动选延迟最低的节点
-  - {name: ♻️ 自动选择, type: url-test, url: "http://www.gstatic.com/generate_204", interval: 300, tolerance: 50, include-all: true, filter: "^(?!.*(网址|发布|直连|剩余|到期|过期|官网|更新|群|游戏)).*$"}
+  - name: 🏯 Explorer
+    type: select
+    proxies: [🇭🇰 香港自动, 🇨🇳 台湾自动, 🇰🇷 韩国自动, 🇸🇬 狮城自动, 🇺🇲 美国自动]
 
-  # 6. 地区分组：简单粗暴的关键词筛选（兼容性好）
-  - {name: 🇭🇰 香港节点, type: select, include-all: true, filter: "(?i)(港|HK|Hong Kong)"}
-  - {name: 🇯🇵 日本节点, type: select, include-all: true, filter: "(?i)(日|JP|Japan)"}
-  - {name: 🇺🇲 美国节点, type: select, include-all: true, filter: "(?i)(美|US|States)"}
-  - {name: 🇸🇬 狮城节点, type: select, include-all: true, filter: "(?i)(新加|坡|SG|Singapore)"}
+  # 自动选择与筛选
+  - name: ♻️ 自动选择
+    type: url-test
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+    tolerance: 50
+    include-all: true
+    filter: "^(?!.*(网址|发布|直连|剩余|到期|过期|官网|更新|群|游戏)).*$"
 
-  # 补全：显示所有节点，方便有时候手动找特定的冷门节点
+  - {name: 🇭🇰 香港手动, type: select, include-all: true, filter: "(?i)(港|HK|Hong Kong)"}
+  - {name: 🇨🇳 台湾手动, type: select, include-all: true, filter: "(?i)(台|TW|Taiwan)"}
+  - {name: 🇯🇵 日本手动, type: select, include-all: true, filter: "(?i)(日|JP|Japan)"}
+  - {name: 🇰🇷 韩国手动, type: select, include-all: true, filter: "(?i)(韩|KR|Korea)"}
+  - {name: 🇸🇬 狮城手动, type: select, include-all: true, filter: "(?i)(新加|坡|SG|Singapore)"}
+  - {name: 🇺🇲 美国手动, type: select, include-all: true, filter: "(?i)(美|US|States)"}
+  - {name: 🇭🇰 香港自动, type: fallback, url: "http://www.gstatic.com/generate_204", interval: 300, tolerance: 50, include-all: true, filter: "(?i)(港|HK|Hong Kong)"}
+  - {name: 🇨🇳 台湾自动, type: fallback, url: "http://www.gstatic.com/generate_204", interval: 300, tolerance: 50, include-all: true, filter: "(?i)(台|TW|Taiwan)"}
+  - {name: 🇯🇵 日本自动, type: fallback, url: "http://www.gstatic.com/generate_204", interval: 300, tolerance: 50, include-all: true, filter: "(?i)(日|JP|Japan)"}
+  - {name: 🇰🇷 韩国自动, type: fallback, url: "http://www.gstatic.com/generate_204", interval: 300, tolerance: 50, include-all: true, filter: "(?i)(韩|KR|Korea)"}
+  - {name: 🇸🇬 狮城自动, type: fallback, url: "http://www.gstatic.com/generate_204", interval: 300, tolerance: 50, include-all: true, filter: "(?i)(新加|坡|SG|Singapore)"}
+  - {name: 🇺🇲 美国自动, type: fallback, url: "http://www.gstatic.com/generate_204", interval: 300, tolerance: 50, include-all: true, filter: "(?i)(美|US|States)"}
   - {name: 🌐 全部节点, type: select, include-all: true, filter: "^(?!.*(网址|发布|直连|剩余|到期|过期|官网|更新|群|游戏)).*$"}
 
-  # 兜底策略
-  - {name: 🐟 漏网之鱼, type: select, proxies: [🚀 节点选择, 直连]}
+  - name: 🐟 漏网之鱼
+    type: select
+    proxies: [🚀 节点选择, 直连]
 
-# 规则匹配
+# 分流规则逻辑
 rules:
-  # 局域网和私有地址直连
+  # 局域网与直连
   - RULE-SET,private_ip,直连,no-resolve
   - RULE-SET,private_domain,直连
+  - RULE-SET,my_direct_domain,直连
   - RULE-SET,apple_domain,直连
   - RULE-SET,apple_ip,直连
-  # 测速网站直连（测自家宽带）
   - RULE-SET,speedtest_domain,直连
-  # PayPal直连（防止风控）
   - RULE-SET,paypal_domain,直连
-  # 中国大陆直连
   - RULE-SET,cn_domain,直连
   - RULE-SET,cn_ip,直连
 
-  # --- 代理区 ---
+  # --- 代理规则 ---
+  - RULE-SET,my_proxy_domain,🚀 节点选择
   - RULE-SET,ai,🤖 人工智能
   - RULE-SET,youtube_domain,📺 国际媒体
   - RULE-SET,netflix_domain,📺 国际媒体
@@ -175,38 +150,224 @@ rules:
   - RULE-SET,telegram_ip,📲 即时通讯
   - RULE-SET,whatsapp_domain,📲 即时通讯
   - RULE-SET,github_domain,🚀 节点选择
-  - RULE-SET,google_domain,🚀 节点选择
-  - RULE-SET,google_ip,🚀 节点选择
+  - RULE-SET,google_domain,🌾 Google
+  - RULE-SET,google_ip,🌾 Google
+  - RULE-SET,javdb_domain,🏯 Explorer
+  - RULE-SET,javbus_domain,🏯 Explorer
   - RULE-SET,geolocation-!cn,🚀 节点选择
 
-  # 剩下的流量
+  # 兜底
   - MATCH,🐟 漏网之鱼
 
-# 规则集
-## type：可选http/file/inline  behavior：可选domain/ipcidr/classical format：可选yaml/text/mrs
-rule-anchor:
-  ip: &ip {type: http, interval: 86400, behavior: ipcidr, format: mrs}
-  domain: &domain {type: http, interval: 86400, behavior: domain, format: mrs}
-
+# 规则集定义 (Rule Providers)
 rule-providers:
-  fakeipfilter_domain: {<<: *domain, url: "https://raw.githubusercontent.com/wwqgtxx/clash-rules/release/fakeip-filter.mrs"}
-  private_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs"}
-  ai: {  <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ai-!cn.mrs" }
-  youtube_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs"}
-  google_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs"}
-  github_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs"}
-  telegram_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs"}
-  whatsapp_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/whatsapp.mrs"}
-  netflix_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.mrs"}
-  paypal_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/paypal.mrs"}
-  apple_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.mrs"}
-  speedtest_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/ookla-speedtest.mrs"}
-  tiktok_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.mrs"}
-  geolocation-!cn: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.mrs"}
-  cn_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs"}
-  private_ip: {<<: *ip, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/private.mrs"}
-  cn_ip: { <<: *ip, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs"}
-  google_ip: { <<: *ip, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/google.mrs"}
-  telegram_ip: { <<: *ip, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/telegram.mrs"}
-  netflix_ip: { <<: *ip, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/netflix.mrs"}
-  apple_ip: {<<: *ip, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo-lite/geoip/apple.mrs"}
+  # --- 你的自定义 GitHub 文件 ---
+  my_direct_domain:
+    type: http
+    behavior: classical
+    format: yaml
+    url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/private-direct-domain.yaml"
+    path: ./ruleset/my_direct_domain.yaml
+    interval: 86400
+
+  my_proxy_domain:
+    type: http
+    behavior: classical
+    format: yaml
+    url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/private-proxy-domain.yaml"
+    path: ./ruleset/my_proxy_domain.yaml
+    interval: 86400
+
+  my_fakeip_filter:
+    type: http
+    behavior: classical
+    format: yaml
+    url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/fakeip-filter.yaml"
+    path: ./ruleset/my_fakeip_filter.yaml
+    interval: 86400
+
+  # --- 公共规则集 (MetaCubeX) ---
+  fakeipfilter_public:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/wwqgtxx/clash-rules@release/fakeip-filter.mrs"
+    path: ./ruleset/fakeipfilter_public.mrs
+    interval: 86400
+
+  private_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/private.mrs"
+    path: ./ruleset/private_domain.mrs
+    interval: 86400
+
+  cn_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/cn.mrs"
+    path: ./ruleset/cn_domain.mrs
+    interval: 86400
+
+  ai:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ai-!cn.mrs"
+    path: ./ruleset/ai.mrs
+    interval: 86400
+
+  youtube_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/youtube.mrs"
+    path: ./ruleset/youtube_domain.mrs
+    interval: 86400
+
+  google_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/google.mrs"
+    path: ./ruleset/google_domain.mrs
+    interval: 86400
+
+  github_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/github.mrs"
+    path: ./ruleset/github_domain.mrs
+    interval: 86400
+
+  telegram_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/telegram.mrs"
+    path: ./ruleset/telegram_domain.mrs
+    interval: 86400
+
+  whatsapp_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/whatsapp.mrs"
+    path: ./ruleset/whatsapp_domain.mrs
+    interval: 86400
+
+  netflix_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/netflix.mrs"
+    path: ./ruleset/netflix_domain.mrs
+    interval: 86400
+
+  paypal_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/paypal.mrs"
+    path: ./ruleset/paypal_domain.mrs
+    interval: 86400
+
+  apple_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/apple.mrs"
+    path: ./ruleset/apple_domain.mrs
+    interval: 86400
+
+  speedtest_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/ookla-speedtest.mrs"
+    path: ./ruleset/speedtest_domain.mrs
+    interval: 86400
+
+  tiktok_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/tiktok.mrs"
+    path: ./ruleset/tiktok_domain.mrs
+    interval: 86400
+
+  geolocation-!cn:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/geolocation-!cn.mrs"
+    path: ./ruleset/geolocation-not-cn.mrs
+    interval: 86400
+
+  javbus_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/javbus.mrs"
+    path: ./ruleset/javbus.mrs
+    interval: 86400
+
+  javdb_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/javdb.mrs"
+    path: ./ruleset/javdb.mrs
+    interval: 86400
+
+  # --- IP 规则 ---
+  private_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/private.mrs"
+    path: ./ruleset/private_ip.mrs
+    interval: 86400
+
+  cn_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.mrs"
+    path: ./ruleset/cn_ip.mrs
+    interval: 86400
+
+  google_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/google.mrs"
+    path: ./ruleset/google_ip.mrs
+    interval: 86400
+
+  telegram_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/telegram.mrs"
+    path: ./ruleset/telegram_ip.mrs
+    interval: 86400
+
+  netflix_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/netflix.mrs"
+    path: ./ruleset/netflix_ip.mrs
+    interval: 86400
+
+  apple_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo-lite/geoip/apple.mrs"
+    path: ./ruleset/apple_ip.mrs
+    interval: 86400
