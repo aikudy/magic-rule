@@ -1,11 +1,13 @@
 # Clash Meta 配置文件示例
 # 适用于 Mihomo、Nikki 等 Clash Meta 客户端
 # 编写规则集参考：https://clash.wiki/
+# update: 2026-06-09
 
 # 机场订阅
 proxy-providers:
   Yesha:
-    url: "~"
+    # 模板占位：提交到仓库时保留空值，实际使用时再替换为真实订阅地址，避免泄露凭据。
+    url: "~~"
     type: http
     interval: 86400
     health-check:
@@ -21,7 +23,8 @@ proxies:
 # 全局配置
 mixed-port: 7890
 allow-lan: false
-bind-address: "*"
+# 多平台模板默认只监听本机，避免误开局域网代理入口。
+bind-address: 127.0.0.1
 ipv6: true
 log-level: info
 mode: rule
@@ -39,33 +42,69 @@ profile:
 # DNS 设置 (Fake-IP 模式)
 dns:
   enable: true
+  cache-algorithm: arc
   ipv6: true
   prefer-h3: true
-  listen: 127.0.0.1:53
+  use-hosts: true
+  use-system-hosts: true
+  # 53 端口在桌面系统上容易与系统服务冲突；1053 作为模板更适合多平台客户端直接导入。
+  listen: 127.0.0.1:1053
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
+  fake-ip-filter-mode: blacklist
+  # 这里保留“黑名单”模式：命中列表的域名返回真实 IP，其余域名返回 Fake-IP。
+  # 这样可以兼顾 DNS 防污染与局域网/直连服务的兼容性。
   fake-ip-filter:
     - "geosite:connectivity-check"
     - "geosite:private"
+    - "rule-set:my_direct_domain"
+    - "+.lan"
+    - "+.local"
+    - "+.home.arpa"
   default-nameserver: # 解析 nameserver 和 fallback 里面的域名（非 IP 的那种情况）
     - 223.5.5.5
     - 119.29.29.29
-    - 8.8.8.8
+  # 代理节点域名通常需要尽快稳定解析，优先走国内公共 DNS，减少启动时的“鸡生蛋”问题。
   proxy-server-nameserver: # 用来解析代理节点的域名
     - https://223.5.5.5/dns-query
     - https://1.12.12.12/dns-query
+  # 明确把私有域名、国内域名和你手动指定的直连域名交给国内 DNS 解析。
+  nameserver-policy:
+    "rule-set:private_domain":
+      - https://223.5.5.5/dns-query
+      - https://1.12.12.12/dns-query
+    "rule-set:cn_domain":
+      - https://223.5.5.5/dns-query
+      - https://1.12.12.12/dns-query
+    "rule-set:my_direct_domain":
+      - https://223.5.5.5/dns-query
+      - https://1.12.12.12/dns-query
   direct-nameserver:
     - https://223.5.5.5/dns-query
     - https://1.12.12.12/dns-query
+  direct-nameserver-follow-policy: true
+  # 默认 nameserver 使用国内 DoH；如果命中海外域名或返回结果疑似污染，再切到 fallback。
   nameserver:
-    - "https://8.8.8.8/dns-query#PROXY&ecs=120.76.0.0/14&ecs-override=true"
+    - https://223.5.5.5/dns-query
+    - https://1.12.12.12/dns-query
+  # fallback 使用海外 DoH，并通过代理发起查询，避免直连请求海外 DNS 时再次被污染或阻断。
+  # ecs & ecs-override 这会把一个明确的 ECS 网段带给 8.8.8.8，让上游 DNS 按这个网段返回结果。它的确可能改善部分 CDN 命中，但代价是额外暴露地理线索，而且对“通用模板”来说不够中性。除非你明确需要这类优化，否则建议去掉 ecs 和ecs-override。
+  fallback:
+    - "https://8.8.8.8/dns-query#PROXY"
+    - "https://1.1.1.1/dns-query#PROXY"
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    geosite:
+      - geolocation-!cn
 
 # TUN 设置
 tun:
   enable: false
   stack: system
-  dns-hijack: # dns劫持端口
-    - 127.0.0.1:53
+  # 这里与 dns.listen 保持一致，后续如果开启 TUN，DNS 劫持会落到本地 1053。
+  dns-hijack:
+    - 127.0.0.1:1053
   device: utun1024 #网卡名称，可修改为utun0或tun0等
   auto-route: true
   strict-route: false # 是否启用严格路由
@@ -77,7 +116,8 @@ proxy-groups:
   # 主开关
   - name: 🚀 节点选择
     type: select
-    proxies: [♻️ 自动选择, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇸🇬 狮城自动, 🇺🇲 美国自动, 🇭🇰 香港手动, 🇨🇳 台湾手动, 🇯🇵 日本手动, 🇰🇷 韩国手动, 🇸🇬 狮城手动, 🇺🇲 美国手动, 🌐 全部节点, 直连]
+    # 主代理组不再提供“直连”，避免把国外流量和未知流量误切为直连。
+    proxies: [♻️ 自动选择, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇯🇵 日本自动, 🇰🇷 韩国自动, 🇸🇬 狮城自动, 🇺🇲 美国自动, 🇭🇰 香港手动, 🇨🇳 台湾手动, 🇯🇵 日本手动, 🇰🇷 韩国手动, 🇸🇬 狮城手动, 🇺🇲 美国手动, 🌐 全部节点]
 
   # 场景策略
   - name: 🌾 Google
@@ -97,7 +137,7 @@ proxy-groups:
 
   - name: 🏯 Explorer
     type: select
-    proxies: [🇭🇰 香港自动, 🇨🇳 台湾自动, 🇰🇷 韩国自动, 🇸🇬 狮城自动, 🇺🇲 美国自动]
+    proxies: [🚀 节点选择, 🇭🇰 香港自动, 🇨🇳 台湾自动, 🇰🇷 韩国自动, 🇸🇬 狮城自动, 🇺🇲 美国自动]
 
   # 自动选择与筛选
   - name: ♻️ 自动选择
@@ -122,29 +162,30 @@ proxy-groups:
   - {name: 🇺🇲 美国自动, type: fallback, url: "http://www.gstatic.com/generate_204", interval: 300, tolerance: 50, include-all: true, filter: "(?i)(美|US|States)"}
   - {name: 🌐 全部节点, type: select, include-all: true, filter: "^(?!.*(网址|发布|直连|剩余|到期|过期|官网|更新|群|游戏)).*$"}
 
-  - name: 🐟 漏网之鱼
-    type: select
-    proxies: [🚀 节点选择, 直连]
-
 # 分流规则逻辑
 rules:
   # 局域网与直连
   - RULE-SET,private_ip,直连,no-resolve
+  # 你的自定义直连 IP 网段，例如家用 NAS、公司内网出口、固定回国线路。
+  - RULE-SET,my_direct_ip,直连,no-resolve
   - RULE-SET,private_domain,直连
   - RULE-SET,my_direct_domain,直连
   - RULE-SET,apple_domain,直连
   - RULE-SET,apple_ip,直连
   - RULE-SET,speedtest_domain,直连
-  - RULE-SET,paypal_domain,直连
   - RULE-SET,cn_domain,直连
   - RULE-SET,cn_ip,直连
 
   # --- 代理规则 ---
+  # 你的自定义代理 IP 网段，例如海外服务固定出口、IP 直连型服务。
+  - RULE-SET,my_proxy_ip,🚀 节点选择,no-resolve
   - RULE-SET,my_proxy_domain,🚀 节点选择
   - RULE-SET,ai,🤖 人工智能
   - RULE-SET,youtube_domain,📺 国际媒体
   - RULE-SET,netflix_domain,📺 国际媒体
   - RULE-SET,netflix_ip,📺 国际媒体
+  # PayPal 更接近海外服务，按“国外优先代理”的总原则放到代理侧更稳妥。
+  - RULE-SET,paypal_domain,🚀 节点选择
   - RULE-SET,tiktok_domain,📺 国际媒体
   - RULE-SET,telegram_domain,📲 即时通讯
   - RULE-SET,telegram_ip,📲 即时通讯
@@ -157,7 +198,8 @@ rules:
   - RULE-SET,geolocation-!cn,🚀 节点选择
 
   # 兜底
-  - MATCH,🐟 漏网之鱼
+  # 无法判定国内还是国外时，直接交给主代理组，显式满足“未知默认代理”。
+  - MATCH,🚀 节点选择
 
 # 规则集定义 (Rule Providers)
 rule-providers:
@@ -178,22 +220,23 @@ rule-providers:
     path: ./ruleset/my_proxy_domain.yaml
     interval: 86400
 
-  my_fakeip_filter:
+  my_direct_ip:
     type: http
-    behavior: classical
+    behavior: ipcidr
     format: yaml
-    url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/fakeip-filter.yaml"
-    path: ./ruleset/my_fakeip_filter.yaml
+    url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/private-direct-ip.yaml"
+    path: ./ruleset/my_direct_ip.yaml
+    interval: 86400
+
+  my_proxy_ip:
+    type: http
+    behavior: ipcidr
+    format: yaml
+    url: "https://raw.githubusercontent.com/aikudy/magic-rule/refs/heads/master/rules/private-proxy-ip.yaml"
+    path: ./ruleset/my_proxy_ip.yaml
     interval: 86400
 
   # --- 公共规则集 (MetaCubeX) ---
-  fakeipfilter_public:
-    type: http
-    behavior: domain
-    format: mrs
-    url: "https://cdn.jsdelivr.net/gh/wwqgtxx/clash-rules@release/fakeip-filter.mrs"
-    path: ./ruleset/fakeipfilter_public.mrs
-    interval: 86400
 
   private_domain:
     type: http
