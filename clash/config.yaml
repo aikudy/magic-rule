@@ -7,7 +7,7 @@
 proxy-providers:
   Yesha:
     # 模板占位：提交到仓库时保留空值，实际使用时再替换为真实订阅地址，避免泄露凭据。
-    url: "~~"
+    url: "placeholder_url"
     type: http
     interval: 86400
     health-check:
@@ -62,36 +62,38 @@ dns:
     - "+.local"
     - "+.home.arpa"
   default-nameserver: # 解析 nameserver 和 fallback 里面的域名（非 IP 的那种情况）
+    - 1.2.4.8
     - 223.5.5.5
     - 119.29.29.29
-  # 代理节点域名通常需要尽快稳定解析，优先走国内公共 DNS，减少启动时的“鸡生蛋”问题。
+  # 代理节点域名必须优先稳定解析，使用国内 DoH 的官方域名。
+  # 不要把 DoH 写成 https://IP/dns-query：TLS 证书/SNI 通常与 IP 不匹配，
+  # 会导致节点域名解析失败，进而表现为多数节点不可用。
   proxy-server-nameserver: # 用来解析代理节点的域名
-    - https://223.5.5.5/dns-query
-    - https://1.12.12.12/dns-query
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
   # 明确把私有域名、国内域名和你手动指定的直连域名交给国内 DNS 解析。
   nameserver-policy:
     "rule-set:private_domain":
-      - https://223.5.5.5/dns-query
-      - https://1.12.12.12/dns-query
+      - https://dns.alidns.com/dns-query
+      - https://doh.pub/dns-query
     "rule-set:cn_domain":
-      - https://223.5.5.5/dns-query
-      - https://1.12.12.12/dns-query
+      - https://dns.alidns.com/dns-query
+      - https://doh.pub/dns-query
     "rule-set:my_direct_domain":
-      - https://223.5.5.5/dns-query
-      - https://1.12.12.12/dns-query
+      - https://dns.alidns.com/dns-query
+      - https://doh.pub/dns-query
   direct-nameserver:
-    - https://223.5.5.5/dns-query
-    - https://1.12.12.12/dns-query
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
   direct-nameserver-follow-policy: true
   # 默认 nameserver 使用国内 DoH；如果命中海外域名或返回结果疑似污染，再切到 fallback。
   nameserver:
-    - https://223.5.5.5/dns-query
-    - https://1.12.12.12/dns-query
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
   # fallback 使用海外 DoH，并通过代理发起查询，避免直连请求海外 DNS 时再次被污染或阻断。
-  # ecs & ecs-override 这会把一个明确的 ECS 网段带给 8.8.8.8，让上游 DNS 按这个网段返回结果。它的确可能改善部分 CDN 命中，但代价是额外暴露地理线索，而且对“通用模板”来说不够中性。除非你明确需要这类优化，否则建议去掉 ecs 和ecs-override。
   fallback:
-    - "https://8.8.8.8/dns-query#PROXY"
-    - "https://1.1.1.1/dns-query#PROXY"
+    - "https://dns.google/dns-query#🚀 节点选择"
+    - "https://cloudflare-dns.com/dns-query#🚀 节点选择"
   fallback-filter:
     geoip: true
     geoip-code: CN
